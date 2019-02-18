@@ -1,5 +1,5 @@
-#ifndef SGF_PARSER_H_
-#define SGF_PARSER_H_
+#ifndef SGF_PARSER_PARSER_H_
+#define SGF_PARSER_PARSER_H_
 
 #include <memory>
 #include <set>
@@ -140,4 +140,4 @@ void DumpTrees(const TreeCollection& tree_collection);
 }  // namespace internal
 }  // namespace sgf_parser
 
-#endif  // SGF_PARSER_H_
+#endif  // SGF_PARSER_PARSER_H_

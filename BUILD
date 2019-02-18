@@ -1,7 +1,7 @@
 cc_library(
-    name = "sgf_parser-lib",
-    srcs = ["sgf_parser.cc"],
-    hdrs = ["sgf_parser.h"],
+    name = "sgf_parser",
+    srcs = ["sgf_parser/parser.cc"],
+    hdrs = ["sgf_parser/parser.h"],
     deps = [
       "@com_google_absl//absl/memory",
       "@com_google_absl//absl/strings",
@@ -12,9 +12,9 @@ cc_library(
 
 cc_test(
     name = "sgf_parser_test",
-    srcs = ["sgf_parser_test.cc"],
+    srcs = ["sgf_parser/parser_test.cc"],
     deps = [
-      ":sgf_parser-lib",
+      ":sgf_parser",
       "@com_google_googletest//:gtest_main",
     ],
     data = glob(["testdata/*.sgf"]),

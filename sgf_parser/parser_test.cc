@@ -1,4 +1,4 @@
-#include "sgf_parser.h"
+#include "sgf_parser/parser.h"
 
 #include <utility>
 
