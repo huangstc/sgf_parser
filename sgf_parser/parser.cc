@@ -418,7 +418,6 @@ bool SimpleParseSgf(const string& sgf, GameRecord* record,
   if (!internal::ParseToCollection(sgf, &game_trees, errors)) {
     return false;
   }
-  DumpTrees(game_trees);
   RETURN_IF(game_trees.empty(), "An empty tree collection.", false);
   RETURN_IF(game_trees.size() > 1, "Multiple trees are not supported.", false);
   const internal::GameTree* current = game_trees[0].get();
