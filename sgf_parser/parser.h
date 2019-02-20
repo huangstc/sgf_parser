@@ -117,8 +117,6 @@ struct GameTree {
   }
 };
 
-typedef std::vector<std::unique_ptr<GameTree>> TreeCollection;
-
 // Finds the first occurrence of any of the characters in `targets`.
 absl::string_view::size_type FindFirst(
     absl::string_view sgf, absl::string_view::size_type start,
@@ -131,11 +129,10 @@ absl::string_view::size_type ConsumeNode(
 
 // Return false if the input is ill-formatted.
 // All errors are saved to "errors" if it is not null.
-bool ParseToCollection(absl::string_view sgf, TreeCollection* tree_collection,
-                       std::string* errors);
+bool ParseToRoot(absl::string_view sgf, GameTree* root, std::string* errors);
 
 // For debugging.
-void DumpTrees(const TreeCollection& tree_collection);
+void DumpRoot(const GameTree& root);
 
 }  // namespace internal
 }  // namespace sgf_parser

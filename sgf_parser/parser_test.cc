@@ -20,9 +20,9 @@ class SgfParserIntenalTest : public ::testing::Test {
   }
 
   bool Parse(string_view input) {
-    trees_.clear();
+    root_.reset(new internal::GameTree(nullptr));
     errors_.clear();
-    return internal::ParseToCollection(input, &trees_, &errors_);
+    return internal::ParseToRoot(input, root_.get(), &errors_);
   }
 
   void VerifyNode(
@@ -39,7 +39,7 @@ class SgfParserIntenalTest : public ::testing::Test {
     }
   }
 
-  internal::TreeCollection trees_;
+  std::unique_ptr<internal::GameTree> root_;
   string errors_;
 };
 
@@ -58,11 +58,11 @@ TEST_F(SgfParserIntenalTest, Simple) {
                         "AW [aa] [ab] AB\n[cc];B[ce];W[gg]\n;B[cf])";
   EXPECT_TRUE(Parse(kInput));
   EXPECT_TRUE(errors_.empty());
-  DumpTrees(trees_);
-  ASSERT_EQ(1, trees_.size());
-  ASSERT_EQ(4, trees_[0]->sequence.size());
-  ASSERT_TRUE(trees_[0]->children.empty());
-  VerifyNode(trees_[0]->sequence[0],
+  DumpRoot(*root_);
+  ASSERT_EQ(1, root_->children.size());
+  ASSERT_EQ(4, root_->children[0]->sequence.size());
+  ASSERT_TRUE(root_->children[0]->children.empty());
+  VerifyNode(root_->children[0]->sequence[0],
     {
       {"FF", {"4"}},
       {"SZ", {"19"}},

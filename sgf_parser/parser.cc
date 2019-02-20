@@ -131,8 +131,8 @@ void DumpTree(const GameTree& tree, int level) {
   }
 }
 
-void DumpTrees(const TreeCollection& tree_collection) {
-  for (const auto& tree : tree_collection) {
+void DumpRoot(const GameTree& root) {
+  for (const auto& tree : root.children) {
     DumpTree(*tree, 0);
   }
 }
@@ -239,8 +239,7 @@ string_view::size_type ConsumeNode(string_view sgf,
 
 // Return false if the input is ill-formatted.
 // All errors are saved to "errors" if it is not null.
-bool ParseToCollection(string_view sgf, TreeCollection* tree_collection,
-                       string* errors) {
+bool ParseToRoot(string_view sgf, GameTree* root, string* errors) {
   enum State {
     START = 0,         // Start of everything,   '('  -->  TREE_START
     TREE_START = 1,    // Enter a new tree,      ';'  -->  NODE_START
@@ -253,8 +252,7 @@ bool ParseToCollection(string_view sgf, TreeCollection* tree_collection,
     END = 4,           // The final state.
   };
 
-  GameTree root(nullptr);  // A virtual root node.
-  GameTree* current_tree = &root;
+  GameTree* current_tree = root;
   State state = START;
   string_view::size_type cursor = 0;
 
@@ -305,13 +303,29 @@ bool ParseToCollection(string_view sgf, TreeCollection* tree_collection,
     }
   } while (state != END);
 
-  RETURN_IF(current_tree != &root, "Parser ends with a bad state.", false);
+  RETURN_IF(current_tree != root, "Parser ends with a bad state.", false);
 
-  std::swap(*tree_collection, root.children);
   return true;
 }
 
 #undef RETURN_IF_NPOS
+
+std::pair<const GameTree*, int> GetFurthestLeaf(const GameTree* root) {
+  if (root->children.empty()) {
+    // This is already a leaf node. Return this node.
+    return std::make_pair(root, root->sequence.size());
+  }
+  const GameTree* furthest_leaf = nullptr;
+  int longest_dist = -1;
+  for (const auto& child : root->children) {
+    auto r = GetFurthestLeaf(child.get());
+    if (r.second > longest_dist) {
+      furthest_leaf = r.first;
+      longest_dist = r.second;
+    }
+  }
+  return std::make_pair(furthest_leaf, longest_dist + root->sequence.size());
+}
 
 }  // namespace internal
 
@@ -337,8 +351,10 @@ bool HandleProperty(const internal::Property& prop, GameRecord* record,
     record->timelimit = tm;
   } else if (id == "KM") {
     RETURN_IF(prop.values.size() != 1, "Bad Komi property.", false);
-    RETURN_IF(!absl::SimpleAtof(prop.values[0], &record->komi),
-              "Bad Komi value.", false);
+    if (!absl::SimpleAtof(prop.values[0], &record->komi)) {
+      LOG(WARNING) << "Cannot parse Komi, use default value " << prop.values[0];
+      record->komi = 6.5f;
+    }
   } else if (id == "RU") {
     RETURN_IF(prop.values.size() != 1, "Bad rule.", false);
     record->rule = string(prop.values[0]);
@@ -414,14 +430,26 @@ bool HandleProperty(const internal::Property& prop, GameRecord* record,
 bool SimpleParseSgf(const string& sgf, GameRecord* record,
                     std::vector<std::pair<string, string>>* unparsed,
                     string* errors) {
-  internal::TreeCollection game_trees;
-  if (!internal::ParseToCollection(sgf, &game_trees, errors)) {
+  internal::GameTree root(nullptr);
+  if (!internal::ParseToRoot(sgf, &root, errors)) {
     return false;
   }
-  RETURN_IF(game_trees.empty(), "An empty tree collection.", false);
-  RETURN_IF(game_trees.size() > 1, "Multiple trees are not supported.", false);
-  const internal::GameTree* current = game_trees[0].get();
-  while (current != nullptr) {
+  RETURN_IF(root.children.empty(), "An empty tree collection.", false);
+
+  // Find the furthest leaf node.
+  auto leaf_with_dist = GetFurthestLeaf(&root);
+
+  // Get the path.
+  std::vector<const internal::GameTree*> path;
+  const internal::GameTree* node = leaf_with_dist.first;
+  while (node != &root) {
+    path.push_back(node);
+    node = node->parent;
+  }
+
+  while (!path.empty()) {
+    const internal::GameTree* current = path.back();
+    path.pop_back();
     for (const auto& node : current->sequence) {
       for (const auto& prop : node) {
         if (!HandleProperty(prop, record, unparsed, errors)) {
@@ -429,13 +457,8 @@ bool SimpleParseSgf(const string& sgf, GameRecord* record,
         }
       }
     }
-    RETURN_IF(current->children.size() > 1,
-              "Branched tree is not supported.", false);
-    if (current->children.empty()) {
-      return true;
-    }
-    current = current->children[0].get();
   }
+
   return true;
 }
 
