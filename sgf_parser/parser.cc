@@ -374,7 +374,7 @@ bool HandleProperty(const internal::Property& prop, GameRecord* record,
     RETURN_IF(prop.values.size() != 1, "Bad date.", false);
     record->date = string(prop.values[0]);
   } else if (id == "RE") {
-    RETURN_IF(prop.values.size() != 1, "Bad result (RU) property.", false);
+    RETURN_IF(prop.values.size() != 1, "Bad result (RE) property.", false);
     string re = absl::AsciiStrToUpper(prop.values[0]);
     if (re.substr(0, 3) == "B+R") {
       record->result = 1.2;    // Actually any positive number works.
@@ -385,17 +385,17 @@ bool HandleProperty(const internal::Property& prop, GameRecord* record,
     } else if (re.size() >= 3) {
       float score;
       RETURN_IF(!absl::SimpleAtof(re.substr(2), &score),
-                "Bad result (RU) value.", false);
+                "Bad result (RE) value: failed in parsing score.", false);
       if (re[0] == 'B') {
         record->result = score;
       } else if (re[0] == 'W') {
         record->result = -score;
       } else {
-        LOG_ERROR("Bad result (RU) value.");
+        LOG_ERROR("Bad result (RE) value: unknown color.");
         return false;
       }
     } else {
-      LOG_ERROR("Bad result (RU) value.");
+      LOG_ERROR("Bad result (RE) value: value too short.");
       return false;
     }
   } else if (id == "AB" || id == "AW") {
