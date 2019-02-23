@@ -347,8 +347,12 @@ bool HandleProperty(const internal::Property& prop, GameRecord* record,
   } else if (id == "TM") {
     RETURN_IF(prop.values.size() != 1, "Bad TM property.", false);
     int tm = 0;
-    RETURN_IF(!absl::SimpleAtoi(prop.values[0], &tm), "Bad TM value.", false);
-    record->timelimit = tm;
+    if (absl::SimpleAtoi(prop.values[0], &tm)) {
+      record->timelimit = tm;
+    } else {
+      LOG(WARNING) << "Cannot parse TM value: " << prop.values[0];
+      record->timelimit = 0;
+    }
   } else if (id == "KM") {
     RETURN_IF(prop.values.size() != 1, "Bad Komi property.", false);
     if (!absl::SimpleAtof(prop.values[0], &record->komi)) {
@@ -376,10 +380,13 @@ bool HandleProperty(const internal::Property& prop, GameRecord* record,
   } else if (id == "RE") {
     RETURN_IF(prop.values.size() != 1, "Bad result (RE) property.", false);
     string re = absl::AsciiStrToUpper(prop.values[0]);
-    if (re.substr(0, 3) == "B+R") {
+    // Resign, Timeout or Forfeit
+    if (re.substr(0, 3) == "B+R" || re.substr(0, 3) == "B+T" ||
+        re.substr(0, 3) == "B+F") {
       record->result = 1.2;    // Actually any positive number works.
       record->resigned = true;
-    } else if (re.substr(0, 3) == "W+R") {
+    } else if (re.substr(0, 3) == "W+R" || re.substr(0, 3) == "W+T" ||
+               re.substr(0, 3) == "W+F") {
       record->result = -1.2;  // Actually any negative number works.
       record->resigned = true;
     } else if (re.size() >= 3) {
