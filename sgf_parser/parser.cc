@@ -473,7 +473,7 @@ bool SimpleParseSgfAndCheck(
     const std::string& sgf_file_name, GoCoord expected_board_size,
     bool check_has_result, GameRecord* record, std::string* errors) {
    const string sgf = ReadFileToString(sgf_file_name);
-   if (!sgf_parser::SimpleParseSgf(sgf_file_name, record, nullptr, errors)) {
+   if (!sgf_parser::SimpleParseSgf(sgf, record, nullptr, errors)) {
      return false;
    }
    if (expected_board_size > 0) {
