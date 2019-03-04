@@ -69,6 +69,13 @@ bool SimpleParseSgf(const std::string& sgf, GameRecord* record,
                     std::vector<std::pair<std::string, std::string>>* unparsed,
                     std::string* errors);
 
+// Loads game record from the file. Checks board size if expected_board_size
+// is not 0. If check_has_result is true, also checks the game result has been
+// parsed.
+bool SimpleParseSgfAndCheck(const std::string& sgf_file_name,
+                            GoCoord expected_board_size, bool check_has_result,
+                            GameRecord* record, std::string* errors);
+
 // Helper function for reading a file.
 std::string ReadFileToString(const std::string& filename);
 

@@ -469,6 +469,27 @@ bool SimpleParseSgf(const string& sgf, GameRecord* record,
   return true;
 }
 
+bool SimpleParseSgfAndCheck(
+    const std::string& sgf_file_name, GoCoord expected_board_size,
+    bool check_has_result, GameRecord* record, std::string* errors) {
+   const string sgf = ReadFileToString(sgf_file_name);
+   if (!sgf_parser::SimpleParseSgf(sgf_file_name, record, nullptr, errors)) {
+     return false;
+   }
+   if (expected_board_size > 0) {
+     if (record->board_width != expected_board_size ||
+         record->board_height != expected_board_size) {
+       LOG_ERROR("Unexpected board size.");
+       return false;
+     }
+   }
+   if (check_has_result && record->result == 0.0f) {
+     LOG_ERROR("The game has an unknown result.");
+     return false;
+   }
+   return true;
+}
+
 #undef RETURN_IF
 #undef LOG_ERROR
 
