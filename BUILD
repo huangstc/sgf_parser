@@ -3,8 +3,8 @@ cc_library(
     srcs = ["sgf_parser/parser.cc"],
     hdrs = ["sgf_parser/parser.h"],
     deps = [
-      "@com_google_absl//absl/memory",
-      "@com_google_absl//absl/strings",
+      "@com_github_google_absl//absl/memory",
+      "@com_github_google_absl//absl/strings",
       "@com_github_google_glog//:glog",
     ],
     visibility=["//visibility:public"],

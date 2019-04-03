@@ -4,7 +4,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # Google libs
 #
 http_archive(
-    name = "com_google_absl",
+    name = "com_github_google_absl",
     url = "https://github.com/abseil/abseil-cpp/archive/master.zip",
     strip_prefix = "abseil-cpp-master",
 )
